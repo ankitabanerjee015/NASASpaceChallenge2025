@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+pandas
+requests
+beautifulsoup4
+transformers
+torch
+faiss-cpu
+sentence-transformers
