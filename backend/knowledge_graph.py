@@ -1,4 +1,4 @@
-def get_graph_data():
+def get_graph_data(publications):
     # Example structure: nodes (publications, topics), edges (relations)
     return {
         "nodes": [
