@@ -50,11 +50,13 @@ def get_similar_publications(query: str, k: int = 10) -> List[Dict[str, Any]]:
     """
     Compute cosine similarity between the query embedding and each publication embedding,
     sort by score (DESC), and return top-k with a scalar 'score'.
+    Falls back to simple text search if embeddings are not available.
     """
     q_emb = _embed_text(query)
     scored: List[Tuple[float, Dict[str, Any]]] = []
+    has_embeddings = False
 
-    # You’ll probably import publications or receive them — adapt accordingly.
+    # You'll probably import publications or receive them — adapt accordingly.
     # If this function already has access to a global 'publications', use it.
     from backend.main import publications  # if you keep it simple; otherwise inject
 
@@ -62,8 +64,26 @@ def get_similar_publications(query: str, k: int = 10) -> List[Dict[str, Any]]:
         emb = pub.get("embedding")
         if emb is None or (isinstance(emb, np.ndarray) and emb.size == 0):
             continue
+        has_embeddings = True
         score = _cosine_sim(q_emb, emb)   # <-- scalar float
         scored.append((score, pub))
+
+    # Fallback to simple text search if no embeddings are available
+    if not has_embeddings:
+        query_lower = query.lower()
+        for pub in publications:
+            title = pub.get("Title", "").lower()
+            # Simple relevance score based on query term matching
+            score = 0.0
+            if query_lower in title:
+                # Exact match in title gets high score
+                score = 1.0
+            elif any(term in title for term in query_lower.split()):
+                # Partial match gets lower score
+                score = 0.5
+            
+            if score > 0:
+                scored.append((score, pub))
 
     # IMPORTANT: sort by key (score), not by whole tuple/array
     scored.sort(key=lambda x: x[0], reverse=True)
