@@ -2,9 +2,21 @@ import pandas as pd
 import requests
 from bs4 import BeautifulSoup
 
-def read_csv(csv_path):
-    df = pd.read_csv(csv_path, sep="\t")
-    return df.to_dict(orient="records")
+def read_csv(path: str):
+    import csv
+    rows = []
+    with open(path, newline="", encoding="utf-8-sig") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            # Repair merged column, if present
+            if "Title,Link" in row and ("Link" not in row):
+                merged = row.get("Title,Link")
+                if isinstance(merged, str) and "," in merged:
+                    title, link = merged.rsplit(",", 1)
+                    row["Title"] = title.strip().strip('"')
+                    row["Link"] = link.strip()
+            rows.append(row)
+    return rows
 
 def fetch_abstract(url):
     try:
