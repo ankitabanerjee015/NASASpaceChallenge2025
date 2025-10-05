@@ -11,27 +11,64 @@ function App() {
   const [searchResults, setSearchResults] = useState([]);
   const [graphData, setGraphData] = useState(null);
 
-  // Fetch publications on mount
+  // Always fetch publications with abstract and summary when the app loads
   useEffect(() => {
     setLoading(true);
-    fetch("/publications")
-      .then(res => res.json())
+    fetch("/publications?include_abstract=true")
+      .then(res => {
+        if (res.status === 304) {
+          setLoading(false);
+          return;
+        }
+        const contentType = res.headers.get("content-type");
+        if (!res.ok || !contentType || !contentType.includes("application/json")) {
+          return res.text().then(text => {
+            throw new Error(`Publications fetch failed: ${res.status} ${text}`);
+          });
+        }
+        return res.json();
+      })
       .then(data => {
-        setPublications(data);
+        if (data && data.items) setPublications(data.items);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Error loading publications", err);
         setLoading(false);
       });
+
     fetch("/knowledge-graph")
       .then(res => res.json())
-      .then(data => setGraphData(data));
+      .then(data => setGraphData(data))
+      .catch(err => {
+        console.error("Error loading knowledge graph", err);
+        setGraphData(null);
+      });
   }, []);
 
   // Handle semantic search
   const handleSearch = () => {
     setLoading(true);
     fetch(`/search?query=${encodeURIComponent(searchQuery)}`)
-      .then(res => res.json())
+      .then(res => {
+        if (res.status === 304) {
+          setLoading(false);
+          return;
+        }
+        const contentType = res.headers.get("content-type");
+        if (!res.ok || !contentType || !contentType.includes("application/json")) {
+          return res.text().then(text => {
+            throw new Error(`Search failed: ${res.status} ${text}`);
+          });
+        }
+        return res.json();
+      })
       .then(data => {
-        setSearchResults(data);
+        if (data) setSearchResults(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error("Error performing search", err);
         setLoading(false);
       });
   };
