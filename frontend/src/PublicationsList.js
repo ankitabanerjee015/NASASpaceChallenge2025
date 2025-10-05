@@ -1,27 +1,58 @@
-import React from "react";
-import { Card, CardContent, Typography, Link, Grid } from "@mui/material";
+import React, { useState } from "react";
+import { Card, CardContent, Typography, FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 
-const PublicationsList = ({ publications }) => (
-  <Grid container spacing={2} sx={{ mt: 2 }}>
-    {publications.map((pub, idx) => (
-      <Grid item xs={12} md={6} key={idx}>
-        <Card>
+const sectionOptions = [
+  "Abstract",
+  "Main",
+  "Results",
+  "Discussion",
+  "Methods",
+  "Acknowledgements",
+  "Author contributions",
+  "Peer review",
+  "Data availability",
+  "Code availability",
+  "Competing interests",
+  "Footnotes",
+  "References",
+  "Associated Data"
+];
+
+function PublicationsList({ publications }) {
+  // Optional: maintain selected section for each publication
+  const [selectedSections, setSelectedSections] = useState({});
+
+  const handleDropdownChange = (idx, value) => {
+    setSelectedSections(prev => ({ ...prev, [idx]: value }));
+  };
+
+  return (
+    <div>
+      {publications.map((pub, idx) => (
+        <Card key={idx} style={{ marginBottom: 16 }}>
           <CardContent>
             <Typography variant="h6">{pub.Title}</Typography>
-            <Link href={pub.Link} target="_blank" rel="noopener">
-              {pub.Link}
-            </Link>
-            <Typography variant="body2" sx={{ mt: 1 }}>
-              <b>Summary:</b> {pub.summary}
-            </Typography>
-            <Typography variant="body2" sx={{ mt: 1 }}>
-              <b>Abstract:</b> {pub.abstract}
-            </Typography>
+            <Typography variant="body2">{pub.summary}</Typography>
+            <Typography variant="body2" color="textSecondary">{pub.abstract}</Typography>
+            <FormControl fullWidth variant="outlined" style={{ marginTop: 8 }}>
+              <InputLabel>Section</InputLabel>
+              <Select
+                label="Section"
+                value={selectedSections[idx] || "Abstract"}
+                onChange={e => handleDropdownChange(idx, e.target.value)}
+              >
+                {sectionOptions.map((option, i) => (
+                  <MenuItem key={i} value={option}>
+                    {option}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
           </CardContent>
         </Card>
-      </Grid>
-    ))}
-  </Grid>
-);
+      ))}
+    </div>
+  );
+}
 
 export default PublicationsList;
